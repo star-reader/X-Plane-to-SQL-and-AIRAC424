@@ -46,8 +46,8 @@ class NavaidParser(BaseParser):
         latitude = self._safe_float(fields[1])
         longitude = self._safe_float(fields[2])
         elevation = self._safe_int(fields[3])
-        frequency = self._safe_int(fields[4])
-        range_nm = self._safe_int(fields[5])
+        frequency = int(self._safe_float(fields[4]))  # 先转浮点数再转整数，处理57.0这种格式
+        range_nm = int(self._safe_float(fields[5]))   # 同样处理
         magnetic_variation = self._safe_float(fields[6])
         identifier = self._safe_str(fields[7])
         usage_type = self._safe_str(fields[8])
@@ -95,17 +95,17 @@ class NavaidParser(BaseParser):
         Returns:
             bool: 频率是否有效
         """
-        # 不同类型导航设备的频率范围
+        # 不同类型导航设备的频率范围 (根据实际数据调整)
         frequency_ranges = {
-            2: (190, 1750),    # NDB: 190-1750 kHz
-            3: (108000, 118000),  # VOR: 108-118 MHz (转换为kHz)
-            4: (108000, 112000),  # ILS LOC: 108-112 MHz
-            5: (108000, 112000),  # ILS GS: 108-112 MHz
-            6: (75000, 76000),    # OM: 75 MHz
-            7: (75000, 76000),    # MM: 75 MHz
-            8: (75000, 76000),    # IM: 75 MHz
-            12: (960000, 1215000), # DME: 960-1215 MHz (转换为kHz)
-            13: (1030000, 1090000) # TACAN: 1030-1090 MHz
+            2: (190, 1750),       # NDB: 190-1750 kHz
+            3: (10800, 11800),    # VOR: 108-118 MHz (实际存储为10800-11800)
+            4: (10800, 11200),    # ILS LOC: 108-112 MHz
+            5: (10800, 11200),    # ILS GS: 108-112 MHz
+            6: (7500, 7600),      # OM: 75 MHz
+            7: (7500, 7600),      # MM: 75 MHz
+            8: (7500, 7600),      # IM: 75 MHz
+            12: (10000, 12000),   # DME: 实际范围更宽，根据数据调整
+            13: (10000, 12000)    # TACAN: 实际范围调整
         }
         
         if nav_type not in frequency_ranges:

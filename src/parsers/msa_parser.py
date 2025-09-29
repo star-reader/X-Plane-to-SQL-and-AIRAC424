@@ -52,10 +52,15 @@ class MsaParser(BaseParser):
             self.logger.warning(f"导航台标识符或机场代码为空: {line}")
             return None
         
-        # 验证扇区数量
-        if sector_count < 1 or sector_count > 3:
+        # 验证扇区数量，如果超过3，只处理前3个
+        if sector_count < 1:
             self.logger.warning(f"MSA扇区数量无效: {sector_count}")
             return None
+        
+        # 限制最大扇区数量为3
+        if sector_count > 3:
+            self.logger.info(f"MSA扇区数量超过3，只处理前3个: {sector_count}")
+            sector_count = 3
         
         # 初始化记录
         record = {

@@ -20,12 +20,16 @@ class BaseParser(ABC):
                 for line_num, line in enumerate(file, 1):
                     line = line.strip()
                     
-                    # 跳过空行和注释行
+                    # 跳过空行、注释行和结束标记
                     if not line or line.startswith('I') or line.startswith('#'):
                         continue
                     
                     # 跳过版本信息行
                     if 'Version - data cycle' in line:
+                        continue
+                    
+                    # 跳过文件结束标记
+                    if line.strip() == '99':
                         continue
                     
                     yield line
@@ -41,6 +45,10 @@ class BaseParser(ABC):
                         continue
                     
                     if 'Version - data cycle' in line:
+                        continue
+                    
+                    # 跳过文件结束标记
+                    if line.strip() == '99':
                         continue
                     
                     yield line

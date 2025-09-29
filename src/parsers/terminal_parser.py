@@ -114,8 +114,15 @@ class TerminalParser(BaseParser):
         line = line[:-1]  # 移除分号
         fields = [field.strip() for field in line.split(',')]
         
+        # 对于字段不足的情况，先检查是否是RWY记录（跑道信息记录格式不同）
         if len(fields) < 10:
-            return None
+            # 检查是否是RWY记录或其他特殊格式
+            if fields and (fields[0].startswith('RWY:') or fields[0].startswith('AIRPORT:')):
+                # 跳过这些特殊格式记录，它们不是标准的终端程序记录
+                return None
+            else:
+                # 其他格式不足的记录也跳过
+                return None
         
         # 解析程序类型和基本信息
         type_info = fields[0].split(':')

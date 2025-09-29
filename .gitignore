@@ -213,3 +213,5 @@ __marimo__/
 /output/*
 
 conversion.log
+
+.DS_Store
