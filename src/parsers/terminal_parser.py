@@ -132,16 +132,16 @@ class TerminalParser(BaseParser):
         procedure_type = type_info[0]
         sequence_number = type_info[1]
         
-        # 解析其他字段
-        route_type = self._safe_int(fields[1])
-        procedure_name = self._safe_str(fields[2])
-        transition_name = self._safe_str(fields[3])
-        waypoint_name = self._safe_str(fields[4])
-        waypoint_region = self._safe_str(fields[5])
-        waypoint_section = self._safe_int(fields[6])
-        waypoint_type = self._safe_str(fields[7])
-        waypoint_description = self._safe_str(fields[8])
-        path_terminator = self._safe_str(fields[12])
+        # 安全解析其他字段，防止索引超出范围
+        route_type = self._safe_int(fields[1]) if len(fields) > 1 else 0
+        procedure_name = self._safe_str(fields[2]) if len(fields) > 2 else ''
+        transition_name = self._safe_str(fields[3]) if len(fields) > 3 else ''
+        waypoint_name = self._safe_str(fields[4]) if len(fields) > 4 else ''
+        waypoint_region = self._safe_str(fields[5]) if len(fields) > 5 else ''
+        waypoint_section = self._safe_int(fields[6]) if len(fields) > 6 else 0
+        waypoint_type = self._safe_str(fields[7]) if len(fields) > 7 else ''
+        waypoint_description = self._safe_str(fields[8]) if len(fields) > 8 else ''
+        path_terminator = self._safe_str(fields[12]) if len(fields) > 12 else ''
         
         # 解析参考导航台信息
         ref_navaid_identifier = self._safe_str(fields[14]) if len(fields) > 14 else ''

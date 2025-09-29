@@ -82,19 +82,27 @@ class MsaParser(BaseParser):
         
         # 解析扇区数据
         field_index = 5
+        actual_sectors = 0
+        
         for sector_num in range(1, sector_count + 1):
             if field_index + 2 < len(fields):
                 bearing = self._safe_int(fields[field_index])
                 altitude = self._safe_int(fields[field_index + 1])
                 radius = self._safe_int(fields[field_index + 2])
                 
-                record[f'sector{sector_num}_bearing'] = bearing
-                record[f'sector{sector_num}_altitude'] = altitude
-                record[f'sector{sector_num}_radius'] = radius
+                # 检查是否是有效的扇区数据
+                if bearing != 0 or altitude != 0 or radius != 0:
+                    record[f'sector{sector_num}_bearing'] = bearing
+                    record[f'sector{sector_num}_altitude'] = altitude
+                    record[f'sector{sector_num}_radius'] = radius
+                    actual_sectors += 1
                 
                 field_index += 3
             else:
-                self.logger.warning(f"MSA扇区{sector_num}数据不足: {line}")
+                # 字段不足，可能是单扇区数据
                 break
+        
+        # 更新实际扇区数量
+        record['sector_count'] = actual_sectors
         
         return record

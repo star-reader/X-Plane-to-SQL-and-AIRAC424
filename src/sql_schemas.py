@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 AIRPORTS_TABLE = """
+DROP TABLE IF EXISTS airports;
 CREATE TABLE airports (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     icao_code VARCHAR(4) NOT NULL,                    -- ICAO机场代码
     region_code VARCHAR(2) NOT NULL,                  -- 地区代码
     latitude DECIMAL(12, 9) NOT NULL,                 -- 纬度
@@ -15,15 +16,16 @@ CREATE TABLE airports (
     transition_level VARCHAR(10) DEFAULT '-1',        -- 过渡高度层 (如FL180)
     
     UNIQUE(icao_code),
-    INDEX idx_airports_icao (icao_code),
-    INDEX idx_airports_region (region_code),
-    INDEX idx_airports_location (latitude, longitude)
+    KEY idx_airports_icao (icao_code),
+    KEY idx_airports_region (region_code),
+    KEY idx_airports_location (latitude, longitude)
 );
 """
 
 AIRWAYS_TABLE = """
+DROP TABLE IF EXISTS airways;
 CREATE TABLE airways (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     from_waypoint VARCHAR(5) NOT NULL,                -- 起始航路点
     from_region VARCHAR(2) NOT NULL,                  -- 起始点地区代码
     from_section INTEGER NOT NULL,                    -- 起始点段落代码
@@ -34,39 +36,41 @@ CREATE TABLE airways (
     direction INTEGER NOT NULL,                       -- 方向 (1=单向, 2=双向)
     min_altitude INTEGER NOT NULL,                    -- 最低高度 (百英尺)
     max_altitude INTEGER NOT NULL,                    -- 最高高度 (百英尺)
-    airway_name VARCHAR(20) NOT NULL,                 -- 航路名称
+    airway_name VARCHAR(120) NOT NULL,                -- 航路名称 (可能很长)
     
-    INDEX idx_airways_from (from_waypoint, from_region),
-    INDEX idx_airways_to (to_waypoint, to_region),
-    INDEX idx_airways_name (airway_name),
-    INDEX idx_airways_type (airway_type)
+    KEY idx_airways_from (from_waypoint, from_region),
+    KEY idx_airways_to (to_waypoint, to_region),
+    KEY idx_airways_name (airway_name),
+    KEY idx_airways_type (airway_type)
 );
 """
 
 
 WAYPOINTS_TABLE = """
+DROP TABLE IF EXISTS waypoints;
 CREATE TABLE waypoints (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     latitude DECIMAL(12, 9) NOT NULL,                 -- 纬度
     longitude DECIMAL(12, 9) NOT NULL,                -- 经度
     waypoint_name VARCHAR(5) NOT NULL,                -- 航路点名称
     usage_type VARCHAR(4) NOT NULL,                   -- 使用类型 (ENRT=航路, TERM=终端等)
     region_code VARCHAR(2) NOT NULL,                  -- 地区代码
     section_code INTEGER NOT NULL,                    -- 段落代码
-    waypoint_id VARCHAR(20) NOT NULL,                 -- 航路点ID
+    waypoint_id VARCHAR(100) NOT NULL,                -- 航路点ID (可能包含描述信息)
     is_terminal BOOLEAN DEFAULT FALSE,                -- 是否为终端航路点 (根据usage_type转换，后面dump成mapbox也要用)
     
-    INDEX idx_waypoints_name (waypoint_name),
-    INDEX idx_waypoints_region (region_code),
-    INDEX idx_waypoints_usage (usage_type),
-    INDEX idx_waypoints_location (latitude, longitude),
-    INDEX idx_waypoints_terminal (is_terminal)
+    KEY idx_waypoints_name (waypoint_name),
+    KEY idx_waypoints_region (region_code),
+    KEY idx_waypoints_usage (usage_type),
+    KEY idx_waypoints_location (latitude, longitude),
+    KEY idx_waypoints_terminal (is_terminal)
 );
 """
 
 HOLDINGS_TABLE = """
+DROP TABLE IF EXISTS holdings;
 CREATE TABLE holdings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     waypoint_name VARCHAR(5) NOT NULL,                -- 等待点名称
     region_code VARCHAR(2) NOT NULL,                  -- 地区代码
     airport_icao VARCHAR(4) NOT NULL,                 -- 相关机场ICAO代码
@@ -79,52 +83,55 @@ CREATE TABLE holdings (
     max_altitude INTEGER NOT NULL,                    -- 最高等待高度 (英尺)
     speed_limit INTEGER NOT NULL,                     -- 速度限制 (节)
     
-    INDEX idx_holdings_waypoint (waypoint_name),
-    INDEX idx_holdings_airport (airport_icao),
-    INDEX idx_holdings_region (region_code)
+    KEY idx_holdings_waypoint (waypoint_name),
+    KEY idx_holdings_airport (airport_icao),
+    KEY idx_holdings_region (region_code)
 );
 """
 
 NAVAIDS_TABLE = """
+DROP TABLE IF EXISTS navaids;
 CREATE TABLE navaids (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     nav_type INTEGER NOT NULL,                        -- 导航设备类型 (3=VOR, 12=DME等，和finix的一样)
     latitude DECIMAL(12, 9) NOT NULL,                 -- 纬度
     longitude DECIMAL(12, 9) NOT NULL,                -- 经度
     elevation INTEGER NOT NULL,                       -- 海拔高度 (英尺)
     frequency INTEGER NOT NULL,                       -- 频率 (kHz)
     range_nm INTEGER NOT NULL,                        -- 作用距离 (海里)
-    magnetic_variation DECIMAL(6, 3) NOT NULL,        -- 磁偏角
-    identifier VARCHAR(3) NOT NULL,                   -- 导航台标识符
+    magnetic_variation DECIMAL(12, 3) NOT NULL,       -- 磁偏角/方位角 (某些类型存储编码方位角)
+    identifier VARCHAR(16) NOT NULL,                  -- 导航台标识符 (最长9字符)
     usage_type VARCHAR(4) NOT NULL,                   -- 使用类型 (ENRT=航路等)
     region_code VARCHAR(2) NOT NULL,                  -- 地区代码
-    name VARCHAR(50) NOT NULL,                        -- 导航台名称
+    name VARCHAR(100) NOT NULL,                       -- 导航台名称 (可能包含长描述)
     
-    INDEX idx_navaids_identifier (identifier),
-    INDEX idx_navaids_type (nav_type),
-    INDEX idx_navaids_region (region_code),
-    INDEX idx_navaids_location (latitude, longitude),
-    INDEX idx_navaids_frequency (frequency)
+    KEY idx_navaids_identifier (identifier),
+    KEY idx_navaids_type (nav_type),
+    KEY idx_navaids_region (region_code),
+    KEY idx_navaids_location (latitude, longitude),
+    KEY idx_navaids_frequency (frequency)
 );
 """
 
 ## 这个和finix的db又不一样，它是直接保留并截断的整数部分，而且从西经开始算，而之前mapbox是从东经开始算
 MORA_TABLE = """
+DROP TABLE IF EXISTS mora;
 CREATE TABLE mora (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     latitude_deg INTEGER NOT NULL,                    -- 纬度 (整数部分)
     longitude_deg INTEGER NOT NULL,                   -- 经度 (整数部分)
     grid_data TEXT NOT NULL,                          -- 网格高度数据 (30个值的字符串)
     
-    INDEX idx_mora_location (latitude_deg, longitude_deg)
+    KEY idx_mora_location (latitude_deg, longitude_deg)
 );
 """
 
 MSA_TABLE = """
+DROP TABLE IF EXISTS msa;
 CREATE TABLE msa (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     sector_count INTEGER NOT NULL,                    -- 扇区数量 (1-3)
-    navaid_identifier VARCHAR(3) NOT NULL,            -- 导航台标识符
+    navaid_identifier VARCHAR(16) NOT NULL,            -- 导航台标识符
     region_code VARCHAR(2) NOT NULL,                  -- 地区代码
     airport_icao VARCHAR(4) NOT NULL,                 -- 机场ICAO代码
     msa_type CHAR(1) NOT NULL,                        -- MSA类型 (M=MSA)
@@ -144,16 +151,17 @@ CREATE TABLE msa (
     sector3_altitude INTEGER,
     sector3_radius INTEGER,
     
-    INDEX idx_msa_navaid (navaid_identifier),
-    INDEX idx_msa_airport (airport_icao),
-    INDEX idx_msa_region (region_code)
+    KEY idx_msa_navaid (navaid_identifier),
+    KEY idx_msa_airport (airport_icao),
+    KEY idx_msa_region (region_code)
 );
 """
 
 # 复杂，按AIRAC转的，不保证完全对，terminal的后面再改
 TERMINAL_PROCEDURES_TABLE = """
+DROP TABLE IF EXISTS terminal_procedures;
 CREATE TABLE terminal_procedures (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     airport_icao VARCHAR(4) NOT NULL,                 -- 机场ICAO代码
     procedure_type VARCHAR(10) NOT NULL,              -- 程序类型 (STAR, SID, APPCH等)
     sequence_number VARCHAR(10) NOT NULL,             -- 序列号
@@ -161,17 +169,17 @@ CREATE TABLE terminal_procedures (
     procedure_name VARCHAR(20) NOT NULL,              -- 程序名称
     transition_name VARCHAR(20),                      -- 过渡段名称
     waypoint_name VARCHAR(5) NOT NULL,                -- 航路点名称
-    waypoint_region VARCHAR(2) NOT NULL,              -- 航路点地区代码
+    waypoint_region VARCHAR(16) NOT NULL,              -- 航路点地区代码
     waypoint_section INTEGER NOT NULL,                -- 航路点段落代码
-    waypoint_type CHAR(1) NOT NULL,                   -- 航路点类型
+    waypoint_type VARCHAR(16) NOT NULL,                -- 航路点类型
     waypoint_description VARCHAR(10),                 -- 航路点描述
-    path_terminator VARCHAR(2) NOT NULL,              -- 航径终止符
+    path_terminator VARCHAR(16) NOT NULL,              -- 航径终止符
     
     -- 参考导航台信息
-    ref_navaid_identifier VARCHAR(3),                 -- 参考导航台标识符
-    ref_navaid_region VARCHAR(2),                     -- 参考导航台地区代码
+    ref_navaid_identifier VARCHAR(6),                 -- 参考导航台标识符
+    ref_navaid_region VARCHAR(16),                     -- 参考导航台地区代码
     ref_navaid_section INTEGER,                       -- 参考导航台段落代码
-    ref_navaid_type CHAR(1),                          -- 参考导航台类型
+    ref_navaid_type VARCHAR(16),                      -- 参考导航台类型
     
     -- 坐标和距离信息
     theta DECIMAL(6, 1),                              -- 方位角
@@ -180,7 +188,7 @@ CREATE TABLE terminal_procedures (
     distance_time VARCHAR(4),                         -- 距离或时间
     
     -- 高度限制
-    altitude_description CHAR(1),                     -- 高度描述符
+    altitude_description VARCHAR(16),                     -- 高度描述符
     altitude1 VARCHAR(10),                            -- 高度1
     altitude2 VARCHAR(10),                            -- 高度2
     transition_altitude VARCHAR(10),                  -- 过渡高度
@@ -191,14 +199,14 @@ CREATE TABLE terminal_procedures (
     -- 其他参数
     vertical_angle DECIMAL(4, 1),                     -- 垂直角度
     center_fix VARCHAR(5),                            -- 中心定位点
-    multiple_code CHAR(1),                            -- 多重代码
-    gnss_fms_indication CHAR(1),                      -- GNSS/FMS指示
+    multiple_code VARCHAR(16),                        -- 多重代码
+    gnss_fms_indication VARCHAR(16),                      -- GNSS/FMS指示
     
-    INDEX idx_terminal_airport (airport_icao),
-    INDEX idx_terminal_type (procedure_type),
-    INDEX idx_terminal_name (procedure_name),
-    INDEX idx_terminal_waypoint (waypoint_name),
-    INDEX idx_terminal_sequence (airport_icao, procedure_type, procedure_name, sequence_number)
+    KEY idx_terminal_airport (airport_icao),
+    KEY idx_terminal_type (procedure_type),
+    KEY idx_terminal_name (procedure_name),
+    KEY idx_terminal_waypoint (waypoint_name),
+    KEY idx_terminal_sequence (airport_icao, procedure_type, procedure_name, sequence_number)
 );
 """
 

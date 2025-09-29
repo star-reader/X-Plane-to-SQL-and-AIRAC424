@@ -99,7 +99,6 @@ class SqlGenerator:
             return
         
         f.write(f"-- {table_name.upper()} 表数据 ({len(records)} 条记录)\n")
-        f.write(f"DELETE FROM {table_name};\n")
         
         # 获取字段名
         field_names = list(records[0].keys())

@@ -40,7 +40,8 @@ class WaypointParser(BaseParser):
         usage_type = self._safe_str(fields[3])
         region_code = self._safe_str(fields[4])
         section_code = self._safe_int(fields[5])
-        waypoint_id = self._safe_str(fields[6])
+        # waypoint_id包含第7列及以后的所有内容（可能是多个单词）
+        waypoint_id = ' '.join(fields[6:]) if len(fields) > 6 else ''
         
         # 验证必要字段
         if not waypoint_name or not usage_type:
